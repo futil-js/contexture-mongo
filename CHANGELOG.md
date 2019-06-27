@@ -1,4 +1,7 @@
-﻿# 0.8.2
+﻿# 0.9.0
+* export buildRegex function used by facet type
+
+# 0.8.2
 * Fix typo on `tagsText` example type
 
 # 0.8.1
