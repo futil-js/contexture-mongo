@@ -135,7 +135,7 @@ describe('dateHistogram', () => {
             min: 400,
             avg: 2650,
             sum: 26500,
-            cardinality: 26500,
+            cardinality: 26500
           },
         ],
       })
