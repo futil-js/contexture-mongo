@@ -1,3 +1,6 @@
+# 0.12.0
+* Facet example type: add support for labeling values from a foreign collection
+
 # 0.11.2
 *  Results example type: Add a doesn't-have-more test case for `hasMore`
 
