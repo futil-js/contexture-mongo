@@ -12,13 +12,18 @@ let projectStageFromLabelFields = node => ({
   },
 })
 
-let sortAndLimitIfSearching = (shouldSortAndLimit, limit) =>
+let sortAndLimitIfSearching = (shouldSortAndLimit, limit, values) =>
   shouldSortAndLimit
-    ? [{ $sort: { count: -1 } }, limit !== 0 && { $limit: limit || 10 }]
+    ? [
+        { $addFields: {
+          isSelected: { $cond: [{ $in: ['$_id', values]}, 1, 0]}
+        } },
+        { $sort: { isSelected: -1, count: -1 } }, limit !== 0 && { $limit: limit || 10 }
+      ]
     : []
 
-let sortAndLimitIfNotSearching = (should, limit) =>
-  sortAndLimitIfSearching(!should, limit)
+let sortAndLimitIfNotSearching = (should, limit, values) =>
+  sortAndLimitIfSearching(!should, limit, values)
 
 let getSearchableKeysList = _.flow(
   _.getOr('_id', 'label.fields'),
@@ -94,7 +99,7 @@ module.exports = {
           // https://docs.mongodb.com/manual/reference/operator/aggregation/unwind/#non-array-field-path
           ...unwindPropOrField(node),
           { $group: { _id: `$${node.field}`, count: { $sum: 1 } } },
-          ...sortAndLimitIfNotSearching(node.optionsFilter, node.size),
+          ...sortAndLimitIfNotSearching(node.optionsFilter, node.size, node.values),
           ...(_.get('label', node)
             ? [
                 {
@@ -115,7 +120,7 @@ module.exports = {
             : []),
           _.get('label.fields', node) && projectStageFromLabelFields(node),
           mapKeywordFilters(node),
-          ...sortAndLimitIfSearching(node.optionsFilter, node.size),
+          ...sortAndLimitIfSearching(node.optionsFilter, node.size, node.values),
         ])
       ),
       search([

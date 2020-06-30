@@ -135,6 +135,21 @@ describe('facet', () => {
       expect(sortIndex === secondToLastIndex).to.be.true
       expect(limitIndex === lastIndex).to.be.true
     })
+    it('should sort by checked values first, then count', async () => {
+      queries = []
+      let node = {
+        optionsFilter: '',
+        size: 2,
+        values: [3],
+        field: 'myField'
+      }
+      await facet.result(node, search)
+      let sortState = _.flow(
+        _.first,
+        _.find(_.has('$sort'))
+      )(queries)
+      expect(Reflect.ownKeys(sortState.$sort)).to.deep.equal(['isSelected', 'count'])
+    }),
     it('should support isMongoId', async () => {
       let node = {
         field: 'field',
