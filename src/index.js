@@ -12,6 +12,7 @@ let MongoProvider = config => ({
   }),
   types: config.types,
   runSearch(options, node, schema, filters, aggs) {
+    console.log({ options, node, filters, aggs })
     let client = config.getClient()
 
     let request = {
@@ -22,6 +23,24 @@ let MongoProvider = config => ({
           {
             $match: filters || {},
           },
+          ...(node.lookup
+            ? [
+                {
+                  $lookup: {
+                    from: node.lookup.from || node.lookup,
+                    localField: node.lookup.localField || node.lookup,
+                    foreignField: node.lookup.foreignField || '_id',
+                    as: node.lookup.as || node.lookup,
+                  },
+                },
+                {
+                  $unwind: {
+                    path: node.lookup.unwindPath || node.lookup,
+                    preserveNullAndEmptyArrays: true,
+                  },
+                },
+              ]
+            : {}),
           ...aggs,
         ],
       },
