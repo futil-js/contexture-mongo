@@ -195,7 +195,7 @@ module.exports = {
             _.compact([
               { $group: { _id: `$${node.field}` } },
               ...lookupLabel(node),
-              _.get('label.fields', node) && projectStageFromLabelFields(node),
+              _.has('label.fields', node) && projectStageFromLabelFields(node),
             ])
           )
         )
