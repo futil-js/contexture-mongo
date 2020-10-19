@@ -1,10 +1,13 @@
 let Promise = require('bluebird')
+let _ = require('lodash/fp')
 
 // Basic function to encapsulate everything needed to run a request - tiny wrapper over raw mongo syntax
 let mongoDSL = (client, dsl) => {
   let Collection = client.collection(dsl.collection)
   if (dsl.aggs) return Collection.aggregate(dsl.aggs).toArray()
 }
+
+
 
 let MongoProvider = config => ({
   groupCombinator: (group, filters) => ({
@@ -27,15 +30,15 @@ let MongoProvider = config => ({
             ? [
                 {
                   $lookup: {
-                    from: node.lookup.from || node.lookup,
-                    localField: node.lookup.localField || node.lookup,
-                    foreignField: node.lookup.foreignField || '_id',
-                    as: node.lookup.as || node.lookup,
+                    from: _.getOr(node.lookup, 'lookup.from', node),
+                    localField: _.getOr(node.lookup, 'lookup.localField', node),
+                    foreignField: _.getOr('_id', 'lookup.foreignField', node),
+                    as: _.getOr(node.lookup, 'lookup.as', node),
                   },
                 },
                 {
                   $unwind: {
-                    path: node.lookup.unwindPath || node.lookup,
+                    path: _.getOr(node.lookup, 'lookup.unwind', node),
                     preserveNullAndEmptyArrays: true,
                   },
                 },
