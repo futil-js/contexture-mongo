@@ -172,7 +172,7 @@ module.exports = {
           { $group: { _id: `$${node.field}`, count: { $sum: 1 } } },
           ...sortAndLimitIfNotSearching(node.optionsFilter, node.size),
           ...lookupLabel(node),
-          _.get('label.fields', node) && projectStageFromLabelFields(node),
+          _.has('label.fields', node) && projectStageFromLabelFields(node),
           mapKeywordFilters(node),
         ])
       )
