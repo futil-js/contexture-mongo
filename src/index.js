@@ -20,7 +20,7 @@ let createLookup = node =>
         },
         {
           $unwind: {
-            path: _.getOr(node.lookup, 'lookup.unwind', node),
+            path: `$${_.getOr(node.lookup, 'lookup.as', node)}`,
             preserveNullAndEmptyArrays: true,
           },
         },
