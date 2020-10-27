@@ -1,19 +1,12 @@
 let _ = require('lodash/fp')
 let { expect } = require('chai')
-let { MongoClient } = require('mongodb')
-let { MongoMemoryServer } = require('mongodb-memory-server')
+let { setUpClientConnection } = require('../utils')
 let dateHistogram = require('../../src/example-types/dateHistogram')
 
 let aggregate
 
 before(async () => {
-  let mongoServer = new MongoMemoryServer()
-  let mongoUri = await mongoServer.getConnectionString()
-  let conn = await MongoClient.connect(mongoUri, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
-  let db = conn.db(await mongoServer.getDbName())
+  let db = await setUpClientConnection()
   let col = db.collection('test')
 
   // Generate sample data
