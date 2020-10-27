@@ -35,14 +35,6 @@ let MongoProvider = config => ({
   }),
   types: config.types,
   runSearch(options, node, schema, filters, aggs) {
-    console.log({
-      config,
-      options,
-      node,
-      schemaFields: JSON.stringify(schema.fields),
-      filters: JSON.stringify(filters),
-      aggs,
-    })
     let client = config.getClient()
 
     let request = {
@@ -63,13 +55,10 @@ let MongoProvider = config => ({
     node._meta.requests.push(request)
 
     let result = Promise.resolve(mongoDSL(client, request.request))
-    let tapped = result.tap(results => {
+    return result.tap(results => {
       // Log response
       request.response = results
     })
-    console.log('REQUEST: ', request)
-    console.log('RESULT: ', Promise.resolve(tapped))
-    return tapped
   },
 })
 
