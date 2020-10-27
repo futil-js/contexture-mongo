@@ -18,14 +18,16 @@ let createLookup = node =>
             as: _.getOr(node.lookup, 'lookup.as', node),
           },
         },
-        {
-          $unwind: {
-            path: `$${_.getOr(node.lookup, 'lookup.as', node)}`,
-            preserveNullAndEmptyArrays: true,
-          },
-        },
+        node.noUnwind
+          ? {}
+          : {
+              $unwind: {
+                path: `$${_.getOr(node.lookup, 'lookup.as', node)}`,
+                preserveNullAndEmptyArrays: true,
+              },
+            },
       ]
-    : {}
+    : []
 
 let MongoProvider = config => ({
   groupCombinator: (group, filters) => ({
@@ -33,7 +35,14 @@ let MongoProvider = config => ({
   }),
   types: config.types,
   runSearch(options, node, schema, filters, aggs) {
-    console.log({ options, node, filters, aggs })
+    console.log({
+      config,
+      options,
+      node,
+      schemaFields: JSON.stringify(schema.fields),
+      filters: JSON.stringify(filters),
+      aggs,
+    })
     let client = config.getClient()
 
     let request = {
@@ -44,7 +53,7 @@ let MongoProvider = config => ({
           {
             $match: filters || {},
           },
-          ...createLookup,
+          ...createLookup(node),
           ...aggs,
         ],
       },
@@ -54,10 +63,13 @@ let MongoProvider = config => ({
     node._meta.requests.push(request)
 
     let result = Promise.resolve(mongoDSL(client, request.request))
-    return result.tap(results => {
+    let tapped = result.tap(results => {
       // Log response
       request.response = results
     })
+    console.log('REQUEST: ', request)
+    console.log('RESULT: ', Promise.resolve(tapped))
+    return tapped
   },
 })
 
