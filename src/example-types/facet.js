@@ -6,9 +6,9 @@ let projectStageFromLabelFields = node => ({
   $project: {
     count: 1,
     ...F.arrayToObject(
-      fieldName => `lookup.${fieldName}`,
+      fieldName => `label.${fieldName}`,
       _.constant(1)
-    )(_.flow(_.get('lookup.fields'), _.castArray)(node)),
+    )(_.flow(_.get('label.fields'), _.castArray)(node)),
   },
 })
 
@@ -21,9 +21,9 @@ let sortAndLimitIfNotSearching = (should, limit) =>
   sortAndLimitIfSearching(!should, limit)
 
 let getSearchableKeysList = _.flow(
-  _.getOr('_id', 'lookup.fields'),
+  _.getOr('_id', 'label.fields'),
   _.castArray,
-  _.map(key => (key === '_id' ? key : `lookup.${key}`))
+  _.map(label => (label === '_id' ? label : `label.${label}`))
 )
 
 let getMatchesForMultipleKeywords = (list, optionsFilter) => ({
@@ -59,15 +59,35 @@ let mapKeywordFilters = node =>
     $match: setMatchOperators(list, node),
   }))(node)
 
-let facetValueLookup = (node, lookup) => {
-  if (!node.lookup) {
+let lookupLabel = node =>
+  _.get('label', node)
+    ? [
+        {
+          $lookup: {
+            from: _.get('label.collection', node),
+            as: 'label',
+            localField: '_id',
+            foreignField: _.get('label.foreignField', node),
+          },
+        },
+        {
+          $unwind: {
+            path: '$label',
+            preserveNullAndEmptyArrays: true,
+          },
+        },
+      ]
+    : []
+
+let facetValueLabel = (node, label) => {
+  if (!node.label) {
     return {}
   }
-  if (!node.lookup.fields || _.isArray(node.lookup.fields)) {
-    return { lookup }
+  if (!node.label.fields || _.isArray(node.label.fields)) {
+    return { label }
   }
   return {
-    lookup: _.flow(_.values, _.first)(lookup),
+    label: _.flow(_.values, _.first)(label),
   }
 }
 
@@ -108,7 +128,8 @@ module.exports = {
           ...unwindPropOrField(node),
           { $group: { _id: `$${node.field}`, count: { $sum: 1 } } },
           ...sortAndLimitIfNotSearching(node.optionsFilter, node.size),
-          _.has('lookup.fields', node) && projectStageFromLabelFields(node),
+          ...lookupLabel(node),
+          _.get('label.fields', node) && projectStageFromLabelFields(node),
           mapKeywordFilters(node),
           ...sortAndLimitIfSearching(node.optionsFilter, node.size),
         ])
@@ -125,7 +146,7 @@ module.exports = {
           F.compactObject({
             name: _id,
             count,
-            ...facetValueLookup(node, label),
+            ...facetValueLabel(node, label),
           }),
         options
       ),
@@ -150,7 +171,8 @@ module.exports = {
           },
           { $group: { _id: `$${node.field}`, count: { $sum: 1 } } },
           ...sortAndLimitIfNotSearching(node.optionsFilter, node.size),
-          _.has('lookup.fields', node) && projectStageFromLabelFields(node),
+          ...lookupLabel(node),
+          _.get('label.fields', node) && projectStageFromLabelFields(node),
           mapKeywordFilters(node),
         ])
       )
@@ -172,7 +194,8 @@ module.exports = {
             },
             _.compact([
               { $group: { _id: `$${node.field}` } },
-              _.has('lookup.fields', node) && projectStageFromLabelFields(node),
+              ...lookupLabel(node),
+              _.get('label.fields', node) && projectStageFromLabelFields(node),
             ])
           )
         )
@@ -181,7 +204,7 @@ module.exports = {
       let totalMissedOptions = _.map(({ _id, label, count }) => ({
         name: _id,
         count,
-        ...facetValueLookup(node, label),
+        ...facetValueLabel(node, label),
       }))(_.concat(lostOptions, zeroCountOptions))
 
       results.options = _.concat(totalMissedOptions, results.options)
