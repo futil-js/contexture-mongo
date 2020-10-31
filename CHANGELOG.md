@@ -1,3 +1,6 @@
+# 0.17.6
+* Support as pops to lookup Populate Items
+
 # 0.17.5
 * Sort early when "hasMany" is set on a "populate" field, but we are not sorting on a joined field
 
