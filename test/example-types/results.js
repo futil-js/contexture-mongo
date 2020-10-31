@@ -45,19 +45,19 @@ describe('results', () => {
         },
       ])
     })
-    it('support converting the \'as\'  attribute to the $lookup \'as\' prop', () => {
+    it("support converting the 'as'  attribute to the $lookup 'as' prop", () => {
       let populate = {
         author: {
           schema: 'user',
           localField: 'createdBy',
           foreignField: '_id',
-          as:'keyAuthor'
+          as: 'keyAuthor',
         },
         org: {
           schema: 'organization',
           localField: 'organization',
           foreignField: '_id',
-          as:'keyOrg'
+          as: 'keyOrg',
         },
       }
       expect(convertPopulate(getSchema)(populate)).to.deep.equal([
