@@ -1,3 +1,5 @@
+> :warning: **Development has moved to the [contexture monorepo](https://github.com/smartprocure/contexture)**: This package lives in https://github.com/smartprocure/contexture/tree/master/packages/provider-mongo
+
 # contexture-mongo
 Mongo Provider for Contexture
 
